@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { 
+      width: 512px; 
+      height: 512px;
+      background: transparent;
+    }
+    .icon {
+      width: 512px;
+      height: 512px;
+      background: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
+      border-radius: 96px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Subtle shine overlay */
+    .icon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%);
+      border-radius: 96px 96px 0 0;
+    }
+    .letter {
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 300px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.15);
+      position: relative;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="icon">
+    <span class="letter">Z</span>
+  </div>
+</body>
+</html>

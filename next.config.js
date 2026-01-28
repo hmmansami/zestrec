@@ -18,7 +18,7 @@ const nextConfig = {
     ),
   },
   allowedDevOrigins: [
-    process.env.SHOPIFY_APP_URL.toString().replace("https://", ""),
+    (process.env.SHOPIFY_APP_URL || "").replace("https://", ""),
   ],
 };
 

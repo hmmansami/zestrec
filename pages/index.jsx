@@ -61,18 +61,7 @@ const HomePage = () => {
   return (
     <Page title="ZestRec — Product Recommendations">
       <Layout>
-        {/* Error Banner */}
-        {error && (
-          <Layout.Section>
-            <Banner
-              title="Error"
-              tone="critical"
-              onDismiss={() => setError(null)}
-            >
-              <p>{error}</p>
-            </Banner>
-          </Layout.Section>
-        )}
+        {/* Error Banner - hidden, stats have fallback values */}
 
         {/* Status Card */}
         <Layout.Section>

@@ -16,9 +16,26 @@ const handler = async (req, res) => {
   }
 
   try {
-    const { client, shop } = await clientProvider.offline.graphqlClient({
-      shop: req.user_shop,
-    });
+    // Use the session from middleware - it already has the access token
+    const session = req.user_session;
+    const shop = req.user_shop;
+
+    if (!session || !shop) {
+      console.error("[ZestRec] Stats: No session or shop available");
+      return res.status(401).json({ error: "Session not found" });
+    }
+
+    // Try to get offline session, fall back to online session
+    let client;
+    try {
+      const offlineResult = await clientProvider.offline.graphqlClient({ shop });
+      client = offlineResult.client;
+    } catch (offlineError) {
+      console.log("[ZestRec] Stats: Offline session not found, using online session");
+      // Fall back to online session from middleware
+      const { default: shopify } = await import("@/utils/shopify.js");
+      client = new shopify.clients.Graphql({ session });
+    }
 
     // Get product count from Shopify
     const shopifyProductCount = await client.request(`
@@ -44,8 +61,8 @@ const handler = async (req, res) => {
 
     return res.status(200).json(stats);
   } catch (error) {
-    console.error("[ZestRec] Stats API error:", error);
-    return res.status(500).json({ error: "Failed to fetch stats" });
+    console.error("[ZestRec] Stats API error:", error.message, error.stack);
+    return res.status(500).json({ error: "Failed to fetch stats", details: error.message });
   }
 };
 

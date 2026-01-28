@@ -33,16 +33,19 @@ const verifyRequest = async (req, res, next) => {
     });
 
     let session = await sessionHandler.loadSession(sessionId);
-    if (!session) {
+    
+    // Check if session exists and is still valid
+    const sessionValid = session && 
+      new Date(session.expires) > new Date() &&
+      shopify.config.scopes.equals(session.scope);
+    
+    if (!sessionValid) {
+      console.log(`[ZestRec] Session invalid or expired for ${shop}, refreshing...`);
       session = await getSession({ shop, authHeader });
     }
-
-    if (
-      new Date(session?.expires) > new Date() &&
-      shopify.config.scopes.equals(session?.scope)
-    ) {
-    } else {
-      session = await getSession({ shop, authHeader });
+    
+    if (!session) {
+      throw Error("Failed to get valid session");
     }
 
     //Add session and shop to the request object so any subsequent routes that use this middleware can access it
@@ -84,6 +87,7 @@ async function getSession({ shop, authHeader }) {
     });
 
     await sessionHandler.storeSession(onlineSession);
+    console.log(`[ZestRec] Stored online session: ${onlineSession.id}`);
 
     const { session: offlineSession } = await shopify.auth.tokenExchange({
       sessionToken,
@@ -92,11 +96,13 @@ async function getSession({ shop, authHeader }) {
     });
 
     await sessionHandler.storeSession(offlineSession);
+    console.log(`[ZestRec] Stored offline session: ${offlineSession.id}`);
 
     return new Session(onlineSession);
   } catch (e) {
     console.error(
       `---> Error happened while pulling session from Shopify: ${e.message}`
     );
+    throw e; // Re-throw so caller knows it failed
   }
 }

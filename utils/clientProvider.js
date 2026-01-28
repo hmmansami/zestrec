@@ -9,6 +9,11 @@ import shopify from "./shopify.js";
 const fetchOfflineSession = async (shop) => {
   const sessionID = shopify.session.getOfflineId(shop);
   const session = await sessionHandler.loadSession(sessionID);
+  
+  if (!session) {
+    throw new Error(`Offline session not found for shop: ${shop} (ID: ${sessionID})`);
+  }
+  
   return session;
 };
 

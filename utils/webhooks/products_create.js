@@ -1,9 +1,7 @@
 /**
  * Product Created Webhook Handler
- * Syncs new product to Algolia
+ * ZestRec uses Shopify's native recommendations, no sync needed!
  */
-
-import { syncProduct } from "../algolia.js";
 
 /**
  * @param {string} topic
@@ -22,22 +20,13 @@ const productsCreateHandler = async (
   try {
     const product = JSON.parse(webhookRequestBody);
     
-    console.log(`[Webhook] Product created: ${product.id} on ${shop}`);
+    console.log(`[ZestRec] Product created: ${product.id} on ${shop}`);
     
-    // Only sync active products
-    if (product.status === 'active') {
-      const result = await syncProduct(product, shop);
-      
-      if (result.success) {
-        console.log(`[Algolia] Synced new product ${product.id} for ${shop}`);
-      } else {
-        console.error(`[Algolia] Failed to sync product ${product.id}:`, result.error);
-      }
-    } else {
-      console.log(`[Webhook] Skipping draft product ${product.id}`);
-    }
+    // Shopify's native recommendations automatically include new products
+    // No external sync needed - that's the beauty of using native APIs!
+    
   } catch (e) {
-    console.error('[Webhook] products/create error:', e);
+    console.error('[ZestRec] products/create webhook error:', e);
   }
 };
 

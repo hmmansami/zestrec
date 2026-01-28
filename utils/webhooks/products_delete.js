@@ -1,9 +1,7 @@
 /**
  * Product Deleted Webhook Handler
- * Removes product from Algolia
+ * ZestRec uses Shopify's native recommendations, no sync needed!
  */
-
-import { deleteProduct } from "../algolia.js";
 
 /**
  * @param {string} topic
@@ -20,19 +18,15 @@ const productsDeleteHandler = async (
   apiVersion
 ) => {
   try {
-    const product = JSON.parse(webhookRequestBody);
+    const data = JSON.parse(webhookRequestBody);
     
-    console.log(`[Webhook] Product deleted: ${product.id} on ${shop}`);
+    console.log(`[ZestRec] Product deleted: ${data.id} on ${shop}`);
     
-    const result = await deleteProduct(product.id, shop);
+    // Shopify's native recommendations automatically exclude deleted products
+    // No external cleanup needed!
     
-    if (result.success) {
-      console.log(`[Algolia] Removed deleted product ${product.id} for ${shop}`);
-    } else {
-      console.error(`[Algolia] Failed to remove product ${product.id}:`, result.error);
-    }
   } catch (e) {
-    console.error('[Webhook] products/delete error:', e);
+    console.error('[ZestRec] products/delete webhook error:', e);
   }
 };
 

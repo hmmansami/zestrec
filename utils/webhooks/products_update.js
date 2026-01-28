@@ -1,9 +1,7 @@
 /**
  * Product Updated Webhook Handler
- * Updates product in Algolia
+ * ZestRec uses Shopify's native recommendations, no sync needed!
  */
-
-import { syncProduct, deleteProduct } from "../algolia.js";
 
 /**
  * @param {string} topic
@@ -22,27 +20,13 @@ const productsUpdateHandler = async (
   try {
     const product = JSON.parse(webhookRequestBody);
     
-    console.log(`[Webhook] Product updated: ${product.id} on ${shop}`);
+    console.log(`[ZestRec] Product updated: ${product.id} on ${shop}`);
     
-    if (product.status === 'active') {
-      // Sync active products
-      const result = await syncProduct(product, shop);
-      
-      if (result.success) {
-        console.log(`[Algolia] Updated product ${product.id} for ${shop}`);
-      } else {
-        console.error(`[Algolia] Failed to update product ${product.id}:`, result.error);
-      }
-    } else {
-      // Remove non-active products from index
-      const result = await deleteProduct(product.id, shop);
-      
-      if (result.success) {
-        console.log(`[Algolia] Removed non-active product ${product.id} for ${shop}`);
-      }
-    }
+    // Shopify's native recommendations automatically reflect product changes
+    // No external sync needed!
+    
   } catch (e) {
-    console.error('[Webhook] products/update error:', e);
+    console.error('[ZestRec] products/update webhook error:', e);
   }
 };
 

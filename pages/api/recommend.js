@@ -1,11 +1,13 @@
 /**
- * Product Recommendations API
+ * ZestRec Product Recommendations API
  * 
  * GET /api/recommend?productId=xxx&shop=mystore.myshopify.com
- * Returns related products from Algolia
+ * Returns related products using Shopify's FREE native recommendations
  */
 
-import { getRelatedProducts } from "@/utils/algolia.js";
+import prisma from "@/utils/prisma.js";
+import { decrypt } from "@/utils/cryption.js";
+import { getRecommendations } from "@/utils/recommendations.js";
 
 /**
  * @param {import("next").NextApiRequest} req
@@ -40,9 +42,27 @@ export default async function handler(req, res) {
   }
   
   try {
-    const result = await getRelatedProducts(
+    // Get shop's access token from database
+    const shopDomain = shop.includes('.myshopify.com') ? shop : `${shop}.myshopify.com`;
+    
+    const session = await prisma.session.findFirst({
+      where: { shop: shopDomain },
+      orderBy: { id: 'desc' }
+    });
+
+    if (!session) {
+      return res.status(404).json({ 
+        error: 'Shop not found. Please install the ZestRec app first.' 
+      });
+    }
+
+    const accessToken = decrypt(session.accessToken);
+
+    // Use Shopify's native recommendations API (FREE!)
+    const result = await getRecommendations(
+      shopDomain,
+      accessToken,
       productId, 
-      shop, 
       parseInt(limit, 10)
     );
     
@@ -52,18 +72,18 @@ export default async function handler(req, res) {
       });
     }
     
-    // Track recommendation served (could log to analytics)
-    console.log(`Served ${result.products.length} recommendations for product ${productId} on ${shop}`);
+    // Track recommendation served
+    console.log(`[ZestRec] Served ${result.count} recommendations for product ${productId} on ${shop}`);
     
     return res.status(200).json({
       success: true,
       productId,
-      shop,
+      shop: shopDomain,
       recommendations: result.products,
-      count: result.products.length
+      count: result.count
     });
   } catch (error) {
-    console.error('Recommendation API error:', error);
+    console.error('[ZestRec] Recommendation API error:', error);
     return res.status(500).json({ 
       error: 'Internal server error' 
     });

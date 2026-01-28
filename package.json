@@ -1,14 +1,10 @@
 {
-  "name": "shopify-nextjs-prisma-app",
-  "version": "2026.01.18",
+  "name": "zestrec",
+  "version": "1.0.0",
+  "description": "ZestRec - Product Recommendations for Shopify using native Shopify API",
   "type": "module",
   "author": {
-    "name": "Harshdeep Singh Hura",
-    "url": "https://harshdeephura.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/kinngh/shopify-nextjs-prisma-app.git"
+    "name": "ZestRec"
   },
   "scripts": {
     "dev": "next dev",
@@ -43,7 +39,6 @@
     "@prisma/client": "^7.2.0",
     "@shopify/polaris": "^13.9.5",
     "@shopify/shopify-api": "^12.3.0",
-    "algoliasearch": "^5.47.0",
     "cryptr": "^6.4.0",
     "dotenv": "^17.2.3",
     "next": "16.1.3",

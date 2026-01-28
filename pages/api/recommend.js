@@ -45,18 +45,20 @@ export default async function handler(req, res) {
     // Get shop's access token from database
     const shopDomain = shop.includes('.myshopify.com') ? shop : `${shop}.myshopify.com`;
     
-    const session = await prisma.session.findFirst({
+    const sessionRecord = await prisma.session.findFirst({
       where: { shop: shopDomain },
       orderBy: { id: 'desc' }
     });
 
-    if (!session) {
+    if (!sessionRecord || !sessionRecord.content) {
       return res.status(404).json({ 
         error: 'Shop not found. Please install the ZestRec app first.' 
       });
     }
 
-    const accessToken = decrypt(session.accessToken);
+    // Session data is stored encrypted in 'content' field
+    const sessionData = JSON.parse(decrypt(sessionRecord.content));
+    const accessToken = sessionData.accessToken;
 
     // Use Shopify's native recommendations API (FREE!)
     const result = await getRecommendations(

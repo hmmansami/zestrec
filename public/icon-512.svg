@@ -1,0 +1,18 @@
+<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners for app icon -->
+  <rect width="512" height="512" rx="96" fill="url(#gradient)"/>
+  
+  <!-- Citrus burst icon centered and scaled -->
+  <g transform="translate(128, 128) scale(4.57)">
+    <circle cx="28" cy="28" r="22" fill="rgba(255,255,255,0.2)"/>
+    <path d="M28 10 L28 28 M28 28 L42 16 M28 28 L42 40 M28 28 L28 46 M28 28 L14 40 M28 28 L14 16" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="28" cy="28" r="6" fill="#fff"/>
+  </g>
+  
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+</svg>

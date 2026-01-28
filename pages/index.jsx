@@ -10,11 +10,10 @@ import {
   InlineStack,
   Layout,
   Page,
-  ProgressBar,
   Spinner,
   Text,
 } from "@shopify/polaris";
-import { RefreshIcon, ExternalIcon, CheckCircleIcon } from "@shopify/polaris-icons";
+import { RefreshIcon, CheckCircleIcon } from "@shopify/polaris-icons";
 import { useRouter } from "next/router";
 import { useState, useEffect, useCallback } from "react";
 
@@ -26,9 +25,8 @@ const HomePage = () => {
   const router = useRouter();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState(null);
-  const [syncSuccess, setSyncSuccess] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -49,62 +47,20 @@ const HomePage = () => {
     fetchStats();
   }, [fetchStats]);
 
-  const handleSync = async () => {
-    try {
-      setSyncing(true);
-      setSyncSuccess(null);
-      setError(null);
-      
-      const response = await fetch("/api/sync", { method: "POST" });
-      const data = await response.json();
-      
-      if (data.success) {
-        setSyncSuccess(`Successfully synced ${data.synced} products to Algolia!`);
-        fetchStats(); // Refresh stats
-      } else {
-        setError(data.error || "Sync failed");
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const syncProgress = stats 
-    ? Math.round((stats.algolia.productsSynced / Math.max(stats.shopify.productCount, 1)) * 100)
-    : 0;
-
   const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
+  const widgetCode = `<div id="ai-recommendations"></div>
+<script src="${appUrl}/widget.js" data-shop="${stats?.shop || 'your-store.myshopify.com'}"></script>`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(widgetCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <Page title="AI Recommendations Dashboard">
+    <Page title="ZestRec — Product Recommendations">
       <Layout>
-        {/* Algolia Configuration Banner */}
-        {!stats?.algolia?.isConfigured && !loading && (
-          <Layout.Section>
-            <Banner
-              title="Algolia not configured"
-              tone="warning"
-            >
-              <p>Add your Algolia credentials to the environment variables to enable product sync and recommendations.</p>
-            </Banner>
-          </Layout.Section>
-        )}
-
-        {/* Success Banner */}
-        {syncSuccess && (
-          <Layout.Section>
-            <Banner
-              title="Sync Complete"
-              tone="success"
-              onDismiss={() => setSyncSuccess(null)}
-            >
-              <p>{syncSuccess}</p>
-            </Banner>
-          </Layout.Section>
-        )}
-
         {/* Error Banner */}
         {error && (
           <Layout.Section>
@@ -118,7 +74,7 @@ const HomePage = () => {
           </Layout.Section>
         )}
 
-        {/* Stats Cards */}
+        {/* Status Card */}
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
@@ -144,7 +100,6 @@ const HomePage = () => {
                 </Box>
               ) : (
                 <InlineStack gap="400" wrap={false}>
-                  {/* Shopify Products */}
                   <Box
                     background="bg-surface-secondary"
                     padding="400"
@@ -153,7 +108,7 @@ const HomePage = () => {
                   >
                     <BlockStack gap="200">
                       <Text variant="headingXs" tone="subdued">
-                        Shopify Products
+                        Total Products
                       </Text>
                       <Text variant="heading2xl">
                         {stats?.shopify?.productCount || 0}
@@ -161,7 +116,6 @@ const HomePage = () => {
                     </BlockStack>
                   </Box>
 
-                  {/* Algolia Synced */}
                   <Box
                     background="bg-surface-secondary"
                     padding="400"
@@ -170,15 +124,17 @@ const HomePage = () => {
                   >
                     <BlockStack gap="200">
                       <Text variant="headingXs" tone="subdued">
-                        Products in Algolia
+                        Recommendations
                       </Text>
-                      <Text variant="heading2xl">
-                        {stats?.algolia?.productsSynced || 0}
-                      </Text>
+                      <Badge tone="success">
+                        <InlineStack gap="100">
+                          <Icon source={CheckCircleIcon} />
+                          Active
+                        </InlineStack>
+                      </Badge>
                     </BlockStack>
                   </Box>
 
-                  {/* Status */}
                   <Box
                     background="bg-surface-secondary"
                     padding="400"
@@ -187,73 +143,29 @@ const HomePage = () => {
                   >
                     <BlockStack gap="200">
                       <Text variant="headingXs" tone="subdued">
-                        Sync Status
+                        Powered By
                       </Text>
-                      <InlineStack gap="200" align="start">
-                        {stats?.sync?.needsSync ? (
-                          <Badge tone="attention">Needs Sync</Badge>
-                        ) : (
-                          <Badge tone="success">
-                            <InlineStack gap="100">
-                              <Icon source={CheckCircleIcon} />
-                              In Sync
-                            </InlineStack>
-                          </Badge>
-                        )}
-                      </InlineStack>
+                      <Text variant="headingMd">
+                        Shopify Native AI
+                      </Text>
                     </BlockStack>
                   </Box>
                 </InlineStack>
               )}
-
-              {/* Sync Progress */}
-              {!loading && stats && (
-                <BlockStack gap="200">
-                  <InlineStack align="space-between">
-                    <Text variant="bodyMd">Sync Progress</Text>
-                    <Text variant="bodyMd">{syncProgress}%</Text>
-                  </InlineStack>
-                  <ProgressBar progress={syncProgress} tone={syncProgress === 100 ? "success" : "primary"} />
-                </BlockStack>
-              )}
             </BlockStack>
           </Card>
         </Layout.Section>
 
-        {/* Actions */}
-        <Layout.Section variant="oneHalf">
+        {/* Widget Installation */}
+        <Layout.Section>
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
-                Sync Products
+                🚀 Widget Installation
               </Text>
               <Text>
-                Sync all your products to Algolia to enable AI-powered recommendations. 
-                Products are automatically synced when created, updated, or deleted.
-              </Text>
-              <InlineStack align="end">
-                <Button
-                  variant="primary"
-                  onClick={handleSync}
-                  loading={syncing}
-                  disabled={syncing || !stats?.algolia?.isConfigured}
-                >
-                  {syncing ? "Syncing..." : "Sync All Products"}
-                </Button>
-              </InlineStack>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-
-        <Layout.Section variant="oneHalf">
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                Widget Installation
-              </Text>
-              <Text>
-                Add the recommendation widget to your store's product pages to show 
-                "You may also like" suggestions.
+                Add this code to your product page template to show "You may also like" 
+                recommendations. Works automatically — no configuration needed!
               </Text>
               <Box
                 background="bg-surface-secondary"
@@ -261,20 +173,72 @@ const HomePage = () => {
                 borderRadius="100"
               >
                 <Text variant="bodyMd" fontFamily="mono">
-                  {`<script src="${appUrl}/widget.js" data-shop="${stats?.shop || 'your-store.myshopify.com'}"></script>`}
+                  {widgetCode}
                 </Text>
               </Box>
               <InlineStack align="end">
                 <Button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `<script src="${appUrl}/widget.js" data-shop="${stats?.shop || 'your-store.myshopify.com'}"></script>`
-                    );
-                  }}
+                  variant="primary"
+                  onClick={handleCopy}
                 >
-                  Copy Code
+                  {copied ? "✓ Copied!" : "Copy Widget Code"}
                 </Button>
               </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        {/* App Proxy Widget */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">
+                📦 App Proxy (Automatic)
+              </Text>
+              <Text>
+                ZestRec also works via Shopify App Proxy. Recommendations are available at:
+              </Text>
+              <Box
+                background="bg-surface-secondary"
+                padding="300"
+                borderRadius="100"
+              >
+                <Text variant="bodyMd" fontFamily="mono">
+                  /apps/zestrec/widget?product_id=PRODUCT_ID&format=json
+                </Text>
+              </Box>
+              <Text tone="subdued">
+                Returns JSON with recommended products. Use format=html for a ready-made widget.
+              </Text>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        {/* How It Works */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">
+                How It Works
+              </Text>
+              <BlockStack gap="200">
+                <InlineStack gap="200">
+                  <Badge>1</Badge>
+                  <Text>Install ZestRec on your store — recommendations activate instantly</Text>
+                </InlineStack>
+                <InlineStack gap="200">
+                  <Badge>2</Badge>
+                  <Text>Add the widget code to your product pages (or use App Proxy)</Text>
+                </InlineStack>
+                <InlineStack gap="200">
+                  <Badge>3</Badge>
+                  <Text>Shopify's AI analyzes your catalog and shows relevant suggestions</Text>
+                </InlineStack>
+                <InlineStack gap="200">
+                  <Badge>4</Badge>
+                  <Text>Customers see personalized "You may also like" products — boosting sales!</Text>
+                </InlineStack>
+              </BlockStack>
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -286,9 +250,6 @@ const HomePage = () => {
               <BlockStack gap="200">
                 <Text as="h2" variant="headingMd">
                   Debug Tools
-                </Text>
-                <Text>
-                  Explore data fetching, webhooks, and API testing.
                 </Text>
                 <InlineStack wrap={false} align="end">
                   <Button
@@ -302,35 +263,6 @@ const HomePage = () => {
             </Card>
           </Layout.Section>
         )}
-
-        {/* Help Section */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                How It Works
-              </Text>
-              <BlockStack gap="200">
-                <InlineStack gap="200">
-                  <Badge>1</Badge>
-                  <Text>Products are synced to Algolia when you install the app or click "Sync All Products"</Text>
-                </InlineStack>
-                <InlineStack gap="200">
-                  <Badge>2</Badge>
-                  <Text>Webhooks keep Algolia in sync when products are created, updated, or deleted</Text>
-                </InlineStack>
-                <InlineStack gap="200">
-                  <Badge>3</Badge>
-                  <Text>Add the widget script to your theme to display recommendations on product pages</Text>
-                </InlineStack>
-                <InlineStack gap="200">
-                  <Badge>4</Badge>
-                  <Text>Customers see "You may also like" suggestions powered by AI</Text>
-                </InlineStack>
-              </BlockStack>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
       </Layout>
     </Page>
   );

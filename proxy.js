@@ -38,6 +38,7 @@ export function proxy(request) {
    * @type {NextResponse}
    */
   const res = NextResponse.next();
+  res.headers.delete("X-Frame-Options");
   res.headers.set(
     "Content-Security-Policy",
     `frame-ancestors https://${shop} https://admin.shopify.com;`

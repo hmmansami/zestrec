@@ -17,9 +17,7 @@ const handler = async (req, res) => {
 
   try {
     const { client, shop } = await clientProvider.offline.graphqlClient({
-      req,
-      res,
-      isOnline: false,
+      shop: req.user_shop,
     });
 
     // Get product count from Shopify
